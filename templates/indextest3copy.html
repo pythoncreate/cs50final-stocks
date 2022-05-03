@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+<head>
+	<title>Autocomplete input suggestion using Python and Flask</title>
+
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<!--<script src="https://code.jquery.com/jquery-3.5.1.min.js" crossorigin="anonymous"></script>-->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" crossorigin="anonymous"></script>
+	<script>
+		$(function() {
+			$("#searchBox").autocomplete({
+				source : function(request, response) {
+					$.ajax({
+						type: "POST",
+						url : "/search",
+						dataType : "json",
+						cache: false,
+						data : {
+							q : request.term
+						},
+						success : function(data) {
+                            var aData=$.map(data, function(item){
+                                return{
+                                    label: item.Name + " (" + item.Symbol + ")",
+                                    value: item.Symbol
+                                }
+                            });
+							response(aData);
+						},
+						error: function(jqXHR, textStatus, errorThrown) {
+							console.log(textStatus + " " + errorThrown);
+						}
+					});
+				},
+				minLength : 2,
+                select: function(event, ui){
+					alert("you selected " + ui.item.value)
+					fetch('/getdata', {
+						headers : {
+							'Content-Type' : 'application/json'
+						},
+						method : 'POST',
+						body : JSON.stringify( {
+							'symbol': ui.item.value
+						})
+					})
+					.then(function (response){
+						if(response.ok) {
+							response.json()
+							.then(function(response) {
+								console.log(response);
+							});
+						}
+						else {
+							throw Error('Something went wrong');
+						}
+					})
+						.catch(function(error) {
+							console.log(error);
+					});
+				}
+			});
+		});
+
+        const queryData = async (event, ui) => {
+			console.log('event', event)
+			console.log('ui', ui)
+            console.log(ui.item.value);
+            let response = await fetch("/getdata?q=" + ui.item.value);
+            console.log("response", response)
+            let stockdata = await response.text();
+            document.querySelector('ul').innerHTML = stockdata;
+        }
+
+        // let input = document.querySelector('input');
+        //   input.addEventListener('input', async function() {
+        //       let response = await fetch('/getdata?q=' + input.value);
+        //       let stockdata = await response.text();
+        //       document.querySelector('ul').innerHTML = stockdata;
+        //   });
+
+	</script>
+</head>
+<body>
+	<div style="width: 600px; margin: auto;">
+		<h2>Search For A Company By Ticker Or Company Name</h2>
+		<p style="width: 560px; margin: auto;">
+			<label>Search Here</label>&nbsp;&nbsp;<input type="text" name="search" id="searchBox"/>
+		</p>
+        <ul></ul>
+		<div>
+			{% for stock in stockresult %}
+			<p>{{stock.priceToBook}}</p>
+			{% endfor %}
+		</div>
+	</div>
+</body>

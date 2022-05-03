@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="A demo site featuring an ajax-based stock widget that uses Python and Flask as a backend microservice API">
+    <meta name="author" content="Shane Larson">
+
+    <title>Python and Flask based Stock Widget - Grizzly Peak Software</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<!--<script src="https://code.jquery.com/jquery-3.5.1.min.js" crossorigin="anonymous"></script>-->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" crossorigin="anonymous"></script>
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/data.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
+    <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"
+    integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
+    <!-- Custom styles for this template -->
+    <!--<script src="/static/scripts/site.js"></script>-->
+    <link href="/static/css/site.css" rel="stylesheet">
+
+   <div class="container">
+    <style>
+        .red {
+            color: red;
+        }
+
+        .green {
+            color: green;
+        }
+    </style>
+              <div class="input-group mb-3">
+                <meta id="my-data" data-name="{{history}}" data-other="{{other}}">
+                <input id="symbol" type="text" class="form-control" placeholder="Enter Stock ETF or Mutual Fund Symbol" aria-label="Stock, ETF or Mutual Fund" aria-describedby="basic-addon2">
+
+              </div>
+            <div class="row"><h1>{{tickerData.name}}({{tickerData.symbol}})</h1></div>
+                <div class="row">
+                    <h2>${{tickerData.price}}
+                    <span class="{{'red' if tickerData.price_change < 0 else 'green'}}">
+                    {{tickerData.price_change}}
+                    </span>
+                    <span class="{{'red' if tickerData.percent_change < 0 else 'green'}}">
+                    ({{tickerData.percent_change}}%)
+                    </span>
+                </h2>
+                </div>
+                <div class="row">
+                      <p>
+                          <a class="btn btn-primary" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                          Company Summary
+                          </a>
+                      </p>
+              <div class="collapse" id="collapseExample">
+                <div class="card card-body">
+                    {{tickerData.summary}}
+                </div>
+             </div>
+             </div>
+             
+
+
+
+                <div id="container-test"></div>
+              </div>
+        </div>
+  <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script>
+    let ticker = "{{ symbol | safe }}"
+    let name = "{{ tickerData.name | safe}}"
+    let price = "{{ tickerData.price | safe }}"
+
+    //let data = JSON.parse('{{ history | tojson }}');
+
+    // let data = '{{ history | safe }}'
+    // let stuff = JSON.parse(data)
+    // // newdata = JSON.loads(stuff)
+    // let closed = stuff["Close"]
+    //let closed ='{{ closed | safe }}'
+
+    //let data = $('#my-data').data();
+
+
+	// let priceData = [];
+    // let dates = [];
+
+	var title = name + " (" + ticker + ") - " + price;
+
+	// for(var i in closed){
+	// 	var dt = i.slice(0,i.length-3);
+	// 	var dateString = moment.unix(dt).format("MM/YY");
+	// 	var close = closed[i];
+	// 	if(close != null){
+	// 		priceData.push(closed[i]);
+	// 		dates.push(dateString);
+	// 	}
+    // }
+
+    // for(var i in closed){
+	// 	var dtx = parseInt(i.slice(0,i.length));
+	// 	//var dateString = moment.unix(dt).format("MM/YY");
+	// 	var close = closed[i];
+	// 	if(close != null){
+	// 		priceData.push([dtx, closed[i]]);
+	// 	}
+    // }
+
+
+    Highcharts.getJSON('http://localhost:5000/history?symbol=' +ticker, function (data) {
+    // Create the chart
+    Highcharts.stockChart('container-test', {
+        rangeSelector: {
+            selected: 1
+        },
+
+        title: {
+            text: title
+        },
+
+        series: [{
+            name: ticker,
+            data: data,
+            tooltip: {
+                valueDecimals: 2
+            }
+        }]
+    });
+})
+
+    </script>
+
+  
+
+
+
+
+  </body>
+
+  </html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta name="viewport" content="initial-scale=1, width=device-width">
+        <title>matches</title>
+    </head>
+    <body>
+
+        <input autocomplete="off" autofocus placeholder="Query" type="search">
+
+
+        <ul></ul>
+
+
+        <form autocomplete="off"><input type="text" name="q" id="q" style="font-weight: 400;" onKeyUp="showResults(this.value)" />
+            <div id="result"></div>
+            </form>
+
+        <script>
+      
+            // let input = document.querySelector('input');
+            // input.addEventListener('input', async function() {
+            //     let response = await fetch('/search?q=' + input.value);
+            //     let query = await response.text();
+            //     console.log('matches', query)
+            //     document.querySelector('ul').innerHTML = query;
+            // });
+
+            //const jsonData= require('./static/data/tickers.json'); 
+            //console.log(jsonData);
+
+            async function getData() {
+            let response = await fetch('./static/data/tickers.json')
+            let data= await response.json()
+            console.log("Data", data)
+                }
+
+            getData()
+
+
+            function autocompleteMatch(input) {
+                if (input == '') {
+                    return [];
+                }
+                var reg = new RegExp(input)
+                return data.filter(function(ticker) {
+                    if (((ticker['Symbol']).match(reg)) || ((ticker['Name']).match(reg)))
+                    {
+                    return term;
+                    console.log("Term", term)
+                    }
+                });
+                }
+
+            function showResults(val) {
+                res = document.getElementById("result");
+                res.innerHTML = '';
+                if (val == '') {
+                    return;
+                }
+                let list = '';
+                fetch('/search?q=' + val).then(
+                function (response) {
+                    return response.json();
+                }).then(function (data) {
+                    for (i=0; i<data.length; i++) {
+                    list += '<li>' + data[i] + '</li>';
+                    }
+                    res.innerHTML = '<ul>' + list + '</ul>';
+                    return true;
+                }).catch(function (err) {
+                    console.warn('Something went wrong.', err);
+                    return false;
+                });
+}
+        </script>
+
+    </body>
+</html>

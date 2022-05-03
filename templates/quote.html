@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="A demo site featuring an ajax-based stock widget that uses Python and Flask as a backend microservice API">
+    <meta name="author" content="Shane Larson">
+
+    <title>Python and Flask based Stock Widget - Grizzly Peak Software</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" crossorigin="anonymous"></script>
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/data.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
+    <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"
+    integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
+    <!-- Custom styles for this template -->
+    <script src="/static/scripts/site.js"></script>
+    <link href="/static/css/site.css" rel="stylesheet">
+    <style>
+        .red {
+            color: red;
+        }
+
+        .yellow{
+            color: yellow;
+        }
+
+        .green {
+            color: green;
+        }
+        
+    </style>
+    </head>
+    
+    <!--input box-->
+    <section id="#input">
+        <div class="container-lg">
+            <div class="row">
+                <div class="col">
+                <div class="input-group mb-3">
+                    <meta id="my-data" data-name="{{history}}" data-other="{{other}}">
+                    <input id="symbol" type="text" class="form-control" placeholder="Enter Stock ETF or Mutual Fund Symbol" aria-label="Stock, ETF or Mutual Fund" aria-describedby="basic-addon2">
+                  </div>
+                  </div>
+            </div>
+            <div class="row">
+                <div class="card border-0 p-0">
+                    <div class="card-body">
+                       <strong>Sector:</strong> {{tickerData.sector}} <strong> Industry:</strong> {{tickerData.industry}}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <h1>{{tickerData.name}}({{tickerData.symbol}})</h1>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <h2>${{tickerData.price}}
+                        <span class="{{'red' if tickerData.price_change < 0 else 'green'}}">
+                        {{tickerData.price_change}}
+                        </span>
+                        <span class="{{'red' if tickerData.percent_change < 0 else 'green'}}">
+                        ({{tickerData.percent_change}}%)
+                        </span>
+                    </h2>
+                </div>
+            </div>
+
+
+            <div class="row mt-4">
+                <div class="col-6">
+                    
+                    <div class="card text-center">
+                        <div class="card-header">
+                            Stock Analyzer Quant Ratings
+                          </div>
+                        <div class="card-body align-middle">
+                            <h3><i class="bi bi-check-circle"></i>Overall Rating:
+                                
+                            {% if tickerData.overallscore in ("F", "D-", "D", "D+", "C-", "C") %}
+                                {% set btn_class = "btn btn-danger" %}
+                            {% elif tickerData.overallscore in ("C+", "B-", "B") %}
+                                {% set btn_class = "btn btn-warning" %}
+                            {% else %}
+                                {% set btn_class = "btn btn-success" %}
+                            {% endif %}
+                            <button type="button" class="{{btn_class}}">{{tickerData.overallscore}}</button>
+                        </h3> 
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col">
+                                <div class="card text-center">
+                                    <div class="card-header">
+                                      Momentum
+                                    </div>
+                                    <div class="card-body align-center">
+                                        {% if tickerData.relstrgrade in ("F", "D-", "D", "D+", "C-", "C") %}
+                                    {% set btn_class = "btn btn-sm btn-danger" %}
+                                {% elif tickerData.relstrgrade in ("C+", "B-", "B") %}
+                                    {% set btn_class = "btn btn-sm btn-warning" %}
+                                {% else %}
+                                    {% set btn_class = "btn btn-sm btn-success" %}
+                                {% endif %}
+                                <button type="button" class="{{btn_class}}"> {{tickerData.relstrgrade}}</button>
+                                    </div>
+                                  </div>
+                            </div>
+                            <div class="col">
+                                <div class="card text-center">
+                                    <div class="card-header">
+                                      Valuation
+                                    </div>
+                                    <div class="card-body">
+                                        {% if tickerData.valgrade in ("F", "D-", "D", "D+", "C-", "C") %}
+                                        {% set btn_class = "btn btn-sm btn-danger" %}
+                                    {% elif tickerData.valgrade in ("C+", "B-", "B") %}
+                                        {% set btn_class = "btn btn-sm btn-warning" %}
+                                    {% else %}
+                                        {% set btn_class = "btn btn-sm btn-success" %}
+                                    {% endif %}
+                                <button type="button" class="{{btn_class}}"> {{tickerData.valgrade}}</button>
+                                    </div>
+                                  </div>
+                            </div>
+                            <div class="col">
+                                <div class="card text-center">
+                                    <div class="card-header">
+                                      Growth
+                                    </div>
+                                    <div class="card-body">
+                                        {% if tickerData.growthgrade in ("F", "D-", "D", "D+", "C-", "C") %}
+                                        {% set btn_class = "btn btn-sm btn-danger" %}
+                                    {% elif tickerData.growthgrade in ("C+", "B-", "B") %}
+                                        {% set btn_class = "btn btn-sm btn-warning" %}
+                                    {% else %}
+                                        {% set btn_class = "btn btn-sm btn-success" %}
+                                    {% endif %}
+                                    <button type="button" class="{{btn_class}}"> {{tickerData.growthgrade}}</button>
+                                    </div>
+                                  </div>
+                            </div>
+                            <div class="col">
+                                <div class="card text-center">
+                                    <div class="card-header">
+                                      Quality
+                                    </div>
+                                    <div class="card-body align-center">
+                                        {% if tickerData.qualitygrade in ("F", "D-", "D", "D+", "C-", "C") %}
+                                {% set btn_class = "btn btn-sm btn-danger" %}
+                            {% elif tickerData.qualitygrade in ("C+", "B-", "B") %}
+                                {% set btn_class = "btn btn-sm btn-warning" %}
+                            {% else %}
+                                {% set btn_class = "btn btn-sm btn-success" %}
+                            {% endif %}
+                            <button type="button" class="{{btn_class}}"> {{tickerData.qualitygrade}}</button>
+                                    </div>
+                                  </div>
+                              </div>
+                          </div>
+                </div>
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-header">
+                            {{ tickerData.symbol}} Key Stats
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="card-body align-middle p-4">
+                            <div><strong>Market Cap: </strong> {{tickerData.marketcap}}</div>
+                            <div><strong>Forward PE Ratio: </strong> {{tickerData.forwardpe|round(2)}}x</div> 
+                            {% if tickerData.ent2rev is none %}
+                            <div><strong>EV To Sales Ratio: </strong>None</div> 
+                            {% else %}
+                            <div><strong>EV To Sales Ratio: </strong> {{tickerData.ent2rev|round(2)}}x</div> 
+                            {% endif %}
+
+                            {% if tickerData.divyield is none %}
+                            <div><strong>Dividend Yield:</strong> 0%</div>
+                            {% else %}
+                            <div><strong>Dividend Yield:</strong>
+                                {{tickerData.divyield|round(2)}}%
+                            </div>
+                            {% endif %} 
+                            
+                            {% if tickerData.revgrwth is none %}
+                            <div><strong>Revenue Growth: </strong> None</div>
+                            {% else %}
+                            <div><strong>Revenue Growth: </strong> {{tickerData.revgrwth|round(2)}}%</div>
+                            {% endif %}
+                            {% if tickerData.earngrwth is none %}
+                            <div><strong>Earnings Growth: </strong> None</div>
+                            {% else %}
+                            <div><strong>Earnings Growth: </strong> {{tickerData.earngrwth|round(2)}}%</div>
+                            {% endif %}
+                            </div>
+                        </div>
+                        <div class="col">
+                        <div class="card-body align-middle p-4">
+                            {% if tickerData.debt2equity is none %}
+                            <div><strong>Debt/Equity: </strong>None</div> 
+                            {% else %}
+                            <div><strong>Debt/Equity: </strong> {{tickerData.debt2equity|round(2)}}x</div> 
+                            {% endif %}
+                            {% if tickerData.roe is none %}
+                            <div><strong>Return On Equity: </strong> None</div>
+                            {% else %}
+                            <div><strong>Return On Equity: </strong> {{tickerData.roe|round(2)}}%</div>
+                            {% endif %}
+                            {% if tickerData.shortpctflt is none %}
+                            <div><strong>Short % Of Float: </strong> None</div>
+                            {% else %}
+                            <div><strong>Short % Of Float: </strong> {{tickerData.shortpctflt|round(1)}}%</div>
+                            {% endif %}
+                            {% if tickerData.beta is none %}
+                            <div><strong>Beta: </strong> None</div>
+                            {% else %}
+                            <div><strong>Beta: </strong> {{tickerData.beta|round(2)}}</div>
+                            {% endif %}
+                            {% if tickerData.recommendation is none %}
+                            <div><strong>Avg Analyst Rec </strong> None</div>
+                            {% else %}
+                            <div><strong>Avg Analyst Rec </strong> {{tickerData.recommendation|upper}}</div>
+                            {% endif %}
+                            {% if tickerData.targetUpDown is none %}
+                            <div><strong>Target Upside/Downside: </strong> None</div>
+                            {% else %}
+                            <div><strong>Target Upside/Downside: </strong> {{tickerData.targetUpDown|round(1)}}%</div>
+                            {% endif %}
+                        </div>
+                        </div>
+    
+                    </div>      
+                        </div>
+                    </div>
+                    </div>
+            
+        
+                        
+        
+                    
+                    
+            <div class="row">
+                <div class="col mt-3 my-2">
+                    <p>
+                        <a class="btn btn-primary" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                        Company Summary
+                        </a>
+                    </p>
+                </div>
+                <div class="collapse" id="collapseExample">
+                    <div class="card card-body">
+                        {{tickerData.summary}}
+                    </div>
+                 </div>
+            </div>
+        
+            <div class="row mt-2">
+                <div class="col">
+                    <div id="container-test"></div>
+                    </div>
+                    </div>
+                    </div>
+        </section>    
+
+  <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script>
+    let ticker = "{{ symbol | upper | safe }}"
+    let name = "{{ tickerData.name | safe}}"
+    let price = "{{ tickerData.price | safe }}"
+
+
+	var title = name + " (" + ticker + ") - " + price;
+
+
+
+    Highcharts.getJSON('http://localhost:5000/history?symbol=' +ticker, function (data) {
+    // Create the chart
+    Highcharts.stockChart('container-test', {
+        rangeSelector: {
+            selected: 1
+        },
+
+        title: {
+            text: title
+        },
+
+        series: [{
+            name: ticker,
+            data: data,
+            tooltip: {
+                valueDecimals: 2
+            }
+        }]
+    });
+})
+
+    </script>
+
+  
+
+
+
+
+  </body>
+
+  </html>
