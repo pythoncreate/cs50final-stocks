@@ -291,7 +291,7 @@
 
 
 
-    Highcharts.getJSON('http://localhost:5000/history?symbol=' +ticker, function (data) {
+    Highcharts.getJSON('/history?symbol=' +ticker, function (data) {
     // Create the chart
     Highcharts.stockChart('container-test', {
         rangeSelector: {
